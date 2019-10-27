@@ -4,16 +4,16 @@ import { GraphQLServer } from 'graphql-yoga';
 
 // Demo user data
 const users = [{
-  id: '1',
+  id: 'u1',
   name: 'Gregory',
   email: 'gregory@example.com',
   age: 42
 }, {
-  id: '2',
+  id: 'u2',
   name: 'Sarah',
   email: 'sarah@example.com'
 }, {
-  id: '3',
+  id: 'u3',
   name: 'Mike',
   email: 'mike@example.com'
 }];
@@ -23,17 +23,42 @@ const posts = [{
   id: 'p1',
   title: 'Post #1',
   body: 'This is body of post #1',
-  published: true
+  published: true,
+  author: "u1"
 }, {
   id: 'p2',
   title: 'Post #2',
   body: 'This is body of post #2',
-  published: true
+  published: true,
+  author: "u2",
 }, {
   id: 'p3',
   title: 'Post #3',
   body: '',
-  published: true
+  published: true,
+  author: "u2"
+}];
+
+const comments = [{
+  id: 'c1',
+  text: 'This is my comment',
+  author: 'u1',
+  post: 'p2'
+}, {
+  id: 'c2',
+  text: 'Dummy comment',
+  author: 'u1',
+  post: 'p2'
+}, {
+  id: 'c3',
+  text: 'Test proposal',
+  author: 'u1',
+  post: 'p3'
+}, {
+  id: 'c4',
+  text: 'Proposal to this post',
+  author: 'u3',
+  post: 'p3'
 }];
 
 // Type definitions (schema)
@@ -41,6 +66,7 @@ const typeDefs = `
   type Query {
     users(query: String): [User!]!
     posts(query: String): [Post!]!
+    comments(query: String): [Comment!]!
     me: User!
     post: Post!
   }
@@ -50,6 +76,8 @@ const typeDefs = `
     name: String!
     email: String!
     age: Int
+    posts: [Post!]!
+    comments: [Comment!]!
   }
 
   type Post {
@@ -57,6 +85,15 @@ const typeDefs = `
     title: String!
     body: String!
     published: Boolean!
+    author: User!
+    comments: [Comment!]!
+  }
+
+  type Comment {
+    id: ID!
+    text: String!
+    author: User!
+    post: Post!
   }
 `;
 
@@ -68,7 +105,7 @@ const resolvers = {
         return users;
       }
 
-      return users.filter((user) => {
+      return users.filter(user => {
         return user.name.toLowerCase().includes(args.query.toLowerCase());
       });
     },
@@ -76,11 +113,17 @@ const resolvers = {
       if (!args.query) {
         return posts;
       }
-      return posts.filter((post) => {
+      return posts.filter(post => {
         const isTitleMatch = post.title.toLowerCase().includes(args.query.toLowerCase());
         const isBodyMatch = post.body.toLowerCase().includes(args.query.toLowerCase());
         return isTitleMatch || isBodyMatch;
       });
+    },
+    comments(parent, args, ctx, info) {
+      if (!args.query) {
+        return comments;
+      }
+      return comments.filter(comment => comment.text.toLowerCase().includes(args.query.toLowerCase()));
     },
     me() {
       return ({
@@ -96,6 +139,30 @@ const resolvers = {
         body: 'It is a test post, which I wrote',
         published: false
       });
+    }
+  },
+  Post: {
+    author(parent, args, ctx, info) {
+      return users.find(user => user.id === parent.author);
+    },
+    comments(parent, args, ctx, info) {
+      return comments.filter(comment => comment.post === parent.id);
+    }
+  },
+  Comment: {
+    author(parent, args, ctx, info) {
+      return users.find(user => user.id === parent.author);
+    },
+    post(parent, args, ctx, info) {
+      return posts.find(post => post.id === parent.post);
+    },
+  },
+  User: {
+    posts(parent, args, ctx, info) {
+      return posts.filter(post => post.author === parent.id);
+    },
+    comments(parent, args, ctx, info) {
+      return comments.filter(comment => comment.author === parent.id);
     }
   }
 };
