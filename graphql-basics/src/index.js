@@ -1,13 +1,46 @@
 import { GraphQLServer } from 'graphql-yoga';
 
-// String, Boolean, Int, Float, ID
+// Scalar types - String, Boolean, Int, Float, ID
+
+// Demo user data
+const users = [{
+  id: '1',
+  name: 'Gregory',
+  email: 'gregory@example.com',
+  age: 42
+}, {
+  id: '2',
+  name: 'Sarah',
+  email: 'sarah@example.com'
+}, {
+  id: '3',
+  name: 'Mike',
+  email: 'mike@example.com'
+}];
+
+// Demo post data
+const posts = [{
+  id: 'p1',
+  title: 'Post #1',
+  body: 'This is body of post #1',
+  published: true
+}, {
+  id: 'p2',
+  title: 'Post #2',
+  body: 'This is body of post #2',
+  published: true
+}, {
+  id: 'p3',
+  title: 'Post #3',
+  body: '',
+  published: true
+}];
 
 // Type definitions (schema)
 const typeDefs = `
   type Query {
-    greeting(name: String, position: String): String!
-    add(numbers: [Float!]!): Float!
-    grades: [Int!]!
+    users(query: String): [User!]!
+    posts(query: String): [Post!]!
     me: User!
     post: Post!
   }
@@ -30,17 +63,24 @@ const typeDefs = `
 // Resolvers
 const resolvers = {
   Query: {
-    greeting(parent, args, ctx, info) {
-      if (args.name && args.position) {
-        return `Hello, ${args.name}! You are my favourite ${args.position}`;
+    users(parent, args, ctx, info) {
+      if (!args.query) {
+        return users;
       }
-      return 'Hello!';
+
+      return users.filter((user) => {
+        return user.name.toLowerCase().includes(args.query.toLowerCase());
+      });
     },
-    add(_, args) {
-      return args.numbers.reduce((prev, curr) => prev + curr, 0);
-    },
-    grades(parent, args, ctx, info) {
-      return [99, 80, 93];
+    posts(parent, args, ctx, info) {
+      if (!args.query) {
+        return posts;
+      }
+      return posts.filter((post) => {
+        const isTitleMatch = post.title.toLowerCase().includes(args.query.toLowerCase());
+        const isBodyMatch = post.body.toLowerCase().includes(args.query.toLowerCase());
+        return isTitleMatch || isBodyMatch;
+      });
     },
     me() {
       return ({
