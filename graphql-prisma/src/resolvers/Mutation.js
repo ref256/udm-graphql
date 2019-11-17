@@ -26,7 +26,6 @@ const Mutation = {
     }
 
     const validPassword = await bcrypt.compare(args.data.password, user.password);
-    console.log(validPassword);
 
     if (!validPassword) {
       throw new Error('Unable to login');
@@ -132,7 +131,6 @@ const Mutation = {
   },
   async deleteComment(parent, args, { prisma, request }, info) {
     const userId = getUserId(request);
-    console.log(userId);
 
     const commentExists = await prisma.exists.Comment({
       id: args.id,

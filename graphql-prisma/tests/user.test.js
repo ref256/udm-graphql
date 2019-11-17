@@ -1,31 +1,67 @@
-import { getFirstName, isValidPassword } from '../src/utils/user';
+import 'cross-fetch/polyfill';
+import prisma from '../src/prisma';
+import getClient from './utils/getClient';
+import seedDatabase, { userOne } from './utils/seedDatabase';
+import { createUser, getUsers, login, getProfile } from './utils/userOperations';
 
-test('Should return first name when given full name', () => {
-  const firstName = getFirstName('Andrew Mead');
+const client = getClient();
 
-  expect(firstName).toBe('Andrew');
-});
+beforeEach(seedDatabase);
 
-test('Should return first name when given first name', () => {
-  const firstName = getFirstName('Jess');
+// test('Should create a new user', async () => {
+//   const variables = {
+//     data: {
+//       name: 'Andrew',
+//       email: 'andrew@example.com',
+//       password: 'pass1234'
+//     }
+//   };
 
-  expect(firstName).toBe('Jess');
-});
+//   const response = await client.mutate({ mutation: createUser, variables });
+//   const userExists = await prisma.exists.User({ id: response.data.createUser.user.id });
 
-test('Should reject password which is shorter than 8 characters', () => {
-  const isValid = isValidPassword('pass123');
+//   expect(userExists).toBe(true);
+// });
 
-  expect(isValid).toBe(false);
-});
+// test('Should expose public author profiles', async () => {
+//   const response = await client.query({ query: getUsers });
 
-test('Should reject password that contains word password', () => {
-  const isValid = isValidPassword('AbcPassword222');
+//   expect(response.data.users.length).toBe(2);
+//   expect(response.data.users[0].email).toBe(null);
+// });
 
-  expect(isValid).toBe(false);
-});
+// test('Should not login with bad credentials', async () => {
+//   const variables = {
+//     data: {
+//       email: 'jen@example.com',
+//       password: 'pppp111'
+//     }
+//   };
 
-test('Should correctly validate a valid password', () => {
-  const isValid = isValidPassword('mysuperpass');
+//   await expect(
+//     client.mutate({ mutation: login, variables })
+//   ).rejects.toThrow();
+// });
 
-  expect(isValid).toBe(true);
-});
+// test('Should not signup user with short password', async () => {
+//   const variables = {
+//     data: {
+//       name: 'Saraha',
+//       email: 'saraha@example.com',
+//       password: 'pass123'
+//     }
+//   };
+
+//   await expect(
+//     client.mutate({ mutation: createUser, variables })
+//   ).rejects.toThrow();
+// });
+
+// test('Should fetch user profile', async () => {
+//   const client = getClient(userOne.jwt);
+//   const { data } = await client.query({ query: getProfile });
+
+//   expect(data.me.id).toBe(userOne.user.id);
+//   expect(data.me.name).toBe(userOne.user.name);
+//   expect(data.me.email).toBe(userOne.user.email);
+// });
